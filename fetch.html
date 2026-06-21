@@ -39,26 +39,24 @@
         </div>
 
         <div class="mt-8 text-center md:text-left">
-            <p class="text-[11px] text-slate-500 font-mono">🔧 Admin Control Panel v3.1</p>
+            <p class="text-[11px] text-slate-500 font-mono">🔧 Admin Control Panel v4.0</p>
         </div>
     </aside>
 
     <main class="flex-1 p-6 md:p-8 overflow-y-auto">
         
-        <!-- ส่วนหัวและการดึงข้อมูลสินค้า -->
         <div class="bg-slate-850 border border-slate-700/70 p-6 rounded-2xl mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
             <div>
                 <span class="bg-orange-500/10 text-orange-400 text-xs px-2.5 py-1 rounded-full font-bold border border-orange-500/20 uppercase tracking-wider">Back-end Panel</span>
                 <h1 class="text-2xl font-bold text-white mt-1.5">📥 ระบบ Fetch ข้อมูลสินค้า AliExpress</h1>
-                <p class="text-sm text-slate-400">ยิง API แกะข้อมูล ระบุหมวดหมู่ และตั้งสถานะแสดงผลเปิด/ปิดหน้าร้าน</p>
+                <p class="text-sm text-slate-400">ยิง API แกะข้อมูล เลือกหมวดหมู่สินค้า และตั้งสถานะแสดงผลเปิด/ปิดหน้าร้าน</p>
             </div>
             
             <div class="flex flex-col sm:flex-row w-full xl:w-auto gap-3">
-                <!-- เพิ่มช่องพิมพ์ระบุหมวดหมู่สินค้าตรงนี้ -->
                 <div class="flex flex-col gap-1 w-full sm:w-56">
                     <label class="text-[11px] text-orange-400 font-bold uppercase tracking-wider ml-1">📂 หมวดหมู่สินค้าที่จะเซฟ</label>
-                    <input type="text" id="category-input" placeholder="เช่น CNC, อะไหล่, เครื่องมือ" 
-                           class="bg-slate-950 border border-slate-600 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 w-full">
+                    <select id="category-input" class="bg-slate-950 border border-slate-600 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 w-full cursor-pointer">
+                        </select>
                 </div>
                 
                 <div class="flex flex-col gap-1 w-full sm:w-72">
@@ -74,10 +72,8 @@
             </div>
         </div>
 
-        <!-- กล่องสถานะการดึงข้อมูล -->
         <div id="status-box" class="mb-6 p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300 hidden"></div>
 
-        <!-- ตารางแสดงรายการสินค้าที่มีอยู่แล้ว -->
         <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
             <div class="p-4 bg-slate-950/40 border-b border-slate-700 flex justify-between items-center">
                 <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">📋 รายการสินค้าทั้งหมดในระบบคุมงาน</h3>
@@ -99,15 +95,14 @@
                             <th class="p-4 w-28 text-center">เปิดแสดงหน้า Index</th>
                             <th class="p-4 w-16 text-center">รูปภาพ</th>
                             <th class="p-4">รายละเอียดสินค้าดิบ</th>
-                            <th class="p-4 w-40">หมวดหมู่</th> 
+                            <th class="p-4 w-48">หมวดหมู่</th> 
                             <th class="p-4 w-36 text-right">ราคาทุน (THB)</th>
                             <th class="p-4 w-36 text-right">ราคาขาย (THB)</th>
                             <th class="p-4 w-28 text-center">เปิดดูต้นทาง</th>
                         </tr>
                     </thead>
                     <tbody id="product-table-body" class="divide-y divide-slate-700/40 text-sm">
-                        <!-- รายการสินค้าจะมาโหลดตรงนี้ -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
             
@@ -130,10 +125,23 @@
 
         let currentPage = 1;
 
-        // โหลดข้อมูลสินค้าทันทีเมื่อเปิดหน้าจอ
+        // 🎯 1. รายชื่อกลุ่มสินค้าหลักของร้านพี่นารูแซก (พี่สามารถเพิ่มคำ/แก้คำตรงนี้ได้เลยครับ!)
+        const AVAILABLE_CATEGORIES = ["CNC", "อะไหล่", "เครื่องมือ", "ไฮดรอลิก"];
+
+        // โหลดข้อมูลสินค้าและเซ็ตดรอปดาวน์ทันทีเมื่อเปิดหน้าจอ
         document.addEventListener('DOMContentLoaded', () => {
+            initCategoryDropdown();
             loadProducts();
         });
+
+        // ฟังก์ชันสร้างตัวเลือกกลุ่มสินค้าใส่ใน Drop-down ด้านบน
+        function initCategoryDropdown() {
+            const dropdown = document.getElementById('category-input');
+            dropdown.innerHTML = `<option value="">-- ไม่ระบุหมวดหมู่ (ทั่วไป) --</option>`;
+            AVAILABLE_CATEGORIES.forEach(cat => {
+                dropdown.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
 
         // ==========================================
         // ฟังก์ชัน: ดึงสินค้าหลังบ้านมาโชว์บนตาราง
@@ -168,10 +176,13 @@
                         : `<div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold mx-auto">NO IMG</div>`;
 
                     const isVisible = product.is_visible !== false; 
-                    
-                    // ดึงชื่อหมวดหมู่มาโชว์ ถ้าไม่มีให้ขึ้นค่าว่างพร้อมปุ่มแอดเพิ่ม
-                    const displayCategory = product.category ? product.category : "ทั่วไป";
-                    const safeCategoryString = product.category ? product.category.replace(/'/g, "\\'") : "";
+                    const currentProductCat = product.category ? product.category : "";
+
+                    // 🎯 2. เปลี่ยนจุดแสดงหมวดหมู่ในตาราง ให้กลายเป็น Drop-down list เลือกเปลี่ยนได้ทันทีแบบด่วน!
+                    let selectOptionsHtml = `<option value="" ${currentProductCat === "" ? "selected" : ""}>ทั่วไป</option>`;
+                    AVAILABLE_CATEGORIES.forEach(cat => {
+                        selectOptionsHtml += `<option value="${cat}" ${currentProductCat === cat ? "selected" : ""}>${cat}</option>`;
+                    });
 
                     tableBody.innerHTML += `
                         <tr class="hover:bg-slate-700/20 transition">
@@ -188,15 +199,10 @@
                                 <div class="text-[11px] text-slate-400 font-mono mt-0.5">Ali ID: ${product.ali_product_id}</div>
                             </td>
                             <td class="p-4">
-                                <div class="flex items-center gap-1.5 group">
-                                    <span class="font-medium text-xs text-orange-300 truncate max-w-[110px]">${displayCategory}</span>
-                                    <!-- 🎯 ปุ่มกด Edit หมวดหมู่แบบด่วนในแถวตาราง -->
-                                    <button onclick="editCategory(${product.id}, '${safeCategoryString}')" 
-                                            class="text-slate-500 hover:text-orange-400 cursor-pointer p-1 rounded hover:bg-slate-900 transition" 
-                                            title="แก้ไขหมวดหมู่">
-                                        ✏️
-                                    </button>
-                                </div>
+                                <select onchange="updateProductCategory(${product.id}, this.value)" 
+                                        class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-orange-300 focus:outline-none focus:border-orange-500 w-full cursor-pointer font-medium">
+                                    ${selectOptionsHtml}
+                                </select>
                             </td>
                             <td class="p-4 text-right font-mono text-slate-300">฿${Number(product.cost_price || 0).toLocaleString()}</td>
                             <td class="p-4 text-right font-mono text-orange-400 font-bold">฿${Number(product.sale_price || 0).toLocaleString()}</td>
@@ -219,19 +225,12 @@
         }
 
         // ==========================================
-        // 🎯 ฟังก์ชันใหม่: อัปเดตเปลี่ยนข้อความหมวดหมู่ในตารางด่วน
+        // 🎯 ฟังก์ชัน: อัปเดตเปลี่ยนหมวดหมู่เมื่อพี่นารูแซกเลือกผ่าน Drop-down ในตาราง
         // ==========================================
-        async function editCategory(productId, currentCategory) {
+        async function updateProductCategory(productId, selectedCategory) {
             if (!productId) return;
-
-            // เด้งหน้าต่างรับค่าข้อความ
-            let newCategory = prompt("✏️ แก้ไขชื่อหมวดหมู่สำหรับสินค้านี้:", currentCategory);
             
-            // ถ้าพี่กด Cancel หรือไม่พิมพ์อะไรเลย ให้ยกเลิกการทำงาน
-            if (newCategory === null) return; 
-            
-            const trimmedValue = newCategory.trim();
-            const finalValue = trimmedValue === "" ? null : trimmedValue;
+            const finalValue = selectedCategory === "" ? null : selectedCategory;
 
             try {
                 const { error } = await supabaseClient
@@ -240,11 +239,10 @@
                     .eq('id', productId);
 
                 if (error) throw error;
-
-                // โหลดตารางใหม่ทันทีเพื่อให้ข้อมูลอัปเดตออนแอร์ตามจริง
-                await loadProducts();
+                console.log(`✅ อัปเดตสินค้าไอดี ${productId} เป็นหมวดหมู่ ${selectedCategory} เรียบร้อย`);
             } catch (err) {
                 alert(`❌ แก้ไขหมวดหมู่ล้มเหลว: ${err.message}`);
+                loadProducts(); // โหลดตารางใหม่เพื่อดึงค่าเดิมกลับมาโชว์กรณีพัง
             }
         }
 
@@ -254,7 +252,7 @@
         async function toggleVisibility(productId, isChecked) {
             try {
                 if (!productId) {
-                    alert("⚠️ บั๊กระบบ: ไม่พบรหัสไอดีสินค้า");
+                    alert("⚠️ ไม่พบรหัสไอดีสินค้า");
                     return;
                 }
 
@@ -289,7 +287,9 @@
             const btn = document.getElementById('sync-btn');
             const statusBox = document.getElementById('status-box');
             const productId = document.getElementById('product-id-input').value.trim();
-            const categoryValue = document.getElementById('category-input').value.trim();
+            
+            // 🎯 ดึงค่าหมวดหมู่จาก Drop-down ด้านบน
+            const categoryValue = document.getElementById('category-input').value;
 
             if (!productId) {
                 alert("กรุณากรอกรหัสสินค้าก่อนครับพี่นารูแซก!");
